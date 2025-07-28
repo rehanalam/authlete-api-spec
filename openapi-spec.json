@@ -1,157 +1,290 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Authlete API Explorer ",
-    "version": "3.0.0",
-    "description": "Authlete is an API-first service for building authorization servers. This explorer provides endpoints for managing services and clients.",
-    "license": {
-      "name": "Apache 2.0",
-      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    "title": "Authlete Minimal API",
+    "description": "Minimal OpenAPI spec sample with 4 endpoints from Authlete.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Authlete Support",
+      "email": "support@authlete.com",
+      "url": "https://authlete.com/contact"
     }
   },
   "servers": [
-    { "url": "https://us.authlete.com", "description": "US Cluster" },
-    { "url": "https://jp.authlete.com", "description": "Japan Cluster" },
-    { "url": "https://eu.authlete.com", "description": "Europe Cluster" },
-    { "url": "https://br.authlete.com", "description": "Brazil Cluster" }
+    {
+      "url": "https://api.authlete.com",
+      "description": "Authlete main server"
+    }
   ],
   "paths": {
-    "/api/{serviceId}/service/get": {
+    "/api/{serviceId}/client/get/{clientId}": {
       "get": {
-        "summary": "Get service by ID",
-        "operationId": "getServiceById",
+        "summary": "Retrieve client information by clientId",
+        "operationId": "getClient",
         "parameters": [
           {
             "name": "serviceId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
-            "description": "The service ID to fetch."
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service identifier"
+          },
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Client identifier"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful retrieval of service details.",
+            "description": "Client information retrieved successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Service" }
+                "schema": {
+                  "$ref": "#/components/schemas/Client"
+                }
               }
             }
           },
-          "400": { "description": "Bad request." },
-          "401": { "description": "Unauthorized." },
-          "500": { "description": "Internal server error." }
+          "404": {
+            "description": "Client not found"
+          }
         }
       }
     },
-    "/api/service/get/list": {
-      "get": {
-        "summary": "List services",
-        "operationId": "listServices",
+    "/api/{serviceId}/client/create": {
+      "post": {
+        "summary": "Create a new client",
+        "operationId": "createClient",
         "parameters": [
           {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer", "minimum": 0 },
-            "description": "Start index of the result set."
-          },
-          {
-            "name": "end",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer", "minimum": 0 },
-            "description": "End index of the result set."
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service identifier"
           }
         ],
+        "requestBody": {
+          "description": "New client data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewClient"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data"
+          }
+        }
+      }
+    },
+    "/api/{serviceId}/client/authorization/update/{clientId}": {
+      "post": {
+        "summary": "Update authorization of a client",
+        "operationId": "updateClientAuthorization",
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service identifier"
+          },
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Client identifier"
+          }
+        ],
+        "requestBody": {
+          "description": "Authorization update data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientAuthorizationUpdate"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "List of services returned successfully.",
+            "description": "Authorization updated successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "start": { "type": "integer" },
-                    "end": { "type": "integer" },
-                    "totalCount": { "type": "integer" },
-                    "services": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/Service" }
+                    "resultCode": {
+                      "type": "integer",
+                      "example": 0
+                    },
+                    "resultMessage": {
+                      "type": "string",
+                      "example": "Success"
                     }
                   }
                 }
               }
             }
           },
-          "400": { "description": "Bad request." },
-          "401": { "description": "Unauthorized." },
-          "500": { "description": "Internal server error." }
+          "400": {
+            "description": "Invalid update data"
+          }
+        }
+      }
+    },
+    "/api/{serviceId}/auth/authorization/ticket/info": {
+      "get": {
+        "summary": "Get authorization ticket information",
+        "operationId": "getAuthorizationTicketInfo",
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service identifier"
+          },
+          {
+            "name": "ticket",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Authorization ticket value"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorization ticket information retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTicketInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket not found or expired"
+          }
         }
       }
     }
   },
   "components": {
     "schemas": {
-      "Service": {
+      "Client": {
         "type": "object",
-        "required": ["serviceName"],
+        "required": ["clientId", "clientName"],
         "properties": {
-          "serviceName": { "type": "string" },
-          "accessTokenDuration": { "type": "integer" },
-          "accessTokenType": { "type": "string" },
-          "authorizationEndpoint": { "type": "string", "format": "uri" },
-          "tokenEndpoint": { "type": "string", "format": "uri" },
-          "revocationEndpoint": { "type": "string", "format": "uri" },
-          "introspectionEndpoint": { "type": "string", "format": "uri" },
-          "clientIdAliasEnabled": { "type": "boolean" },
-          "pkceRequired": { "type": "boolean" },
-          "supportedGrantTypes": {
-            "type": "array",
-            "items": { "type": "string" }
+          "clientId": {
+            "type": "string",
+            "description": "Client identifier"
           },
-          "supportedResponseTypes": {
-            "type": "array",
-            "items": { "type": "string" }
+          "clientName": {
+            "type": "string",
+            "description": "Client display name"
           },
-          "supportedTokenAuthMethods": {
-            "type": "array",
-            "items": { "type": "string" }
+          "clientSecret": {
+            "type": "string",
+            "description": "Client secret"
+          }
+        }
+      },
+      "NewClient": {
+        "type": "object",
+        "required": ["clientName"],
+        "properties": {
+          "clientName": {
+            "type": "string",
+            "description": "Client display name"
           },
-          "supportedScopes": {
+          "redirectUris": {
             "type": "array",
             "items": {
-              "type": "object",
-              "properties": {
-                "name": { "type": "string" },
-                "defaultEntry": { "type": "boolean" },
-                "description": { "type": "string" }
-              },
-              "required": ["name"]
-            }
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "List of redirect URIs"
+          }
+        }
+      },
+      "ClientAuthorizationUpdate": {
+        "type": "object",
+        "required": ["subject", "scopes"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "User subject identifier"
           },
-          "attributes": {
+          "scopes": {
             "type": "array",
             "items": {
-              "type": "object",
-              "properties": {
-                "key": { "type": "string" },
-                "value": { "type": "string" }
-              },
-              "required": ["key", "value"]
-            }
+              "type": "string"
+            },
+            "description": "List of scopes to authorize"
+          }
+        }
+      },
+      "AuthTicketInfo": {
+        "type": "object",
+        "required": ["ticket", "clientId", "subject"],
+        "properties": {
+          "ticket": {
+            "type": "string",
+            "description": "Authorization ticket value"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Client identifier associated with the ticket"
+          },
+          "subject": {
+            "type": "string",
+            "description": "User subject identifier"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Authorized scopes"
           }
         }
       }
-    },
-    "securitySchemes": {
-      "bearer": {
-        "type": "http",
-        "scheme": "bearer"
-      }
     }
-  },
-  "security": [
-    { "bearer": [] }
-  ]
+  }
 }
