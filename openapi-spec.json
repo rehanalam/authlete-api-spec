@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Authlete API Explorer",
+    "title": "Authlete API Explorer ",
     "version": "3.0.0",
     "description": "Authlete is an API-first service for building authorization servers. This explorer provides endpoints for managing services and clients.",
     "license": {
