@@ -17,5 +17,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.SDK_REPO_TOKEN }}
-          repository: rehanalam/speakeasy-petstore-typescript-sdk
-          event-type: trigger-sdk-generation
+          repository: rehanalam/authlete-python
+          event-type: trigger-authlete-sdk-generation
