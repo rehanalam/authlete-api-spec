@@ -38,14 +38,18 @@ jobs:
       - name: Confirm OpenAPI file exists
         run: ls -l spec/
 
-      - name: In-place spec import to APIMatic
+      - name: In-place import with debug
         run: |
-          curl -X PUT \
+          curl -v -X PUT \
             --url "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/import-via-file" \
-            -H "user-agent: user-agent" \
+            -H "user-agent: GitHub-Actions" \
             -H "Accept: application/vnd.apimatic.apiEntity.full.v1+json" \
             -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
-            -F "file=@spec/openapi-spec.json"
+            -F "file=@spec/openapi-spec.json" \
+            -o import-response.json
+
+          echo "----- Response from APIMatic -----"
+          cat import-response.json
 
 
      
