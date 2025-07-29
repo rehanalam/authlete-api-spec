@@ -15,8 +15,10 @@ jobs:
     env:
       APIMATIC_API_KEY: ${{ secrets.API_KEY }}
       APIMATIC_API_ID: ${{ secrets.API_ENTITY_ID }}
-      GITHUB_REPO: your-github-repo-name
-      GITHUB_ACCOUNT: your-github-account-name
+     
+      GH_PUSH_TOKEN: ${{ secrets.GH_PUSH_TOKEN }}
+      TARGET_REPO: rehanalam/new-authlete-cs-sdk
+      SDK_TEMPLATE: CS_NET_STANDARD_LIB
 
     steps:
       - name: Checkout repository
@@ -50,6 +52,51 @@ jobs:
 
           echo "----- Response from APIMatic -----"
           cat import-response.json
+
+      - name: Trigger SDK generation
+        run: |
+          curl -X POST \
+            --url "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/code-generations/generate" \
+            -H "Accept: application/json" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -d "template=$SDK_TEMPLATE" \
+            -o sdk-gen-response.json
+
+          cat sdk-gen-response.json
+          echo "CODEGEN_ID=$(jq -r '.codeGenerationId' sdk-gen-response.json)" >> $GITHUB_ENV
+
+      - name: Wait for SDK generation to complete
+        run: |
+          echo "Waiting 10 seconds for SDK to be ready..."
+          sleep 10
+
+      - name: Download SDK zip
+        run: |
+          curl -X GET \
+            --url "https://api.apimatic.io/code-generations/$CODEGEN_ID/download" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -o sdk.zip
+
+      - name: Unzip SDK
+        run: unzip sdk.zip -d sdk
+
+      - name: Clone target repo
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git clone https://x-access-token:$GH_PUSH_TOKEN@github.com/$TARGET_REPO.git target-repo
+
+      - name: Copy SDK into target repo
+        run: |
+          rm -rf target-repo/*
+          cp -r sdk/* target-repo/
+
+      - name: Push to GitHub
+        run: |
+          cd target-repo
+          git add .
+          git commit -m "chore: auto-update SDK from APIMatic"
+          git push origin main
 
 
      
