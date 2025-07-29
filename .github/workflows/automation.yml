@@ -42,7 +42,7 @@ jobs:
         run: |
           curl -X PUT \
             --url "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/import-via-file" \
-            -H "user-agent: GitHub-Actions" \
+            -H "user-agent: user-agent" \
             -H "Accept: application/vnd.apimatic.apiEntity.full.v1+json" \
             -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
             -F "file=@spec/openapi-spec.json"
