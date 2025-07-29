@@ -39,18 +39,18 @@ jobs:
         run: |
           curl -X PUT \
             --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
-            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
-            -H "Accept: application/json" \
-            -F "file=@spec/openapi.yml \
+            --header "Authorization:X-Auth-Key $APIMATIC_API_KEY" \
+            --header "Accept:application/json" \
             -o entity.json
+            
 
       - name: Trigger SDK generation
         run: |
           curl -X POST \
             --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID/code-generations" \
-            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
-            -H "accept: application/json, text/plain, */*" \
-            -H "content-type: application/json;charset=UTF-8" \
+            --header "Authorization:X-Auth-Key $APIMATIC_API_KEY" \
+            --header "accept: application/json, text/plain, */*" \
+            --header "content-type: application/json;charset=UTF-8" \
             --data-raw '{
               "template": "CS_NET_STANDARD_LIB",
               "repoName": "'"$GITHUB_REPO"'",
