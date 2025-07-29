@@ -41,7 +41,7 @@ jobs:
             --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
             -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
             -H "Accept: application/json" \
-            -F "file=@spec/openapi.yaml" \
+            -F "file=@spec/openapi-spec.json" \
             -o entity.json
 
       - name: Trigger SDK generation
