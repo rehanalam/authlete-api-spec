@@ -65,6 +65,13 @@ jobs:
           cat sdk-gen-response.json
           echo "CODEGEN_ID=$(jq -r '.codeGenerationId' sdk-gen-response.json)" >> $GITHUB_ENV
       
+      - name: Publish Developer Portal
+        run: |
+          curl -X PUT \
+            --url "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/hosted-portal" \
+            -H "user-agent: GitHub-Actions" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY"
+
       - name: Wait for SDK generation to complete
         run: |
           echo "Waiting 10 seconds for SDK to be ready..."
