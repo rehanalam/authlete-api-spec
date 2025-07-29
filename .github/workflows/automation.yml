@@ -41,11 +41,12 @@ jobs:
       - name: In-place spec import to APIMatic
         run: |
           curl -X PUT \
-            --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
+            --url "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/import-via-file" \
+            -H "user-agent: GitHub-Actions" \
+            -H "Accept: application/vnd.apimatic.apiEntity.full.v1+json" \
             -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
-            -H "Accept: application/json" \
-            -F "file=@spec/openapi-spec.json" \
-            -o entity.json
+            -F "file=@spec/openapi-spec.json"
+
 
       - name: Trigger SDK generation
         run: |
