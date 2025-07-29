@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      APIMATIC_API_KEY: ${{ secrets.APIMATIC_API_KEY }}
-      APIMATIC_API_ID: ${{ secrets.APIMATIC_API_ID }}
+      APIMATIC_API_KEY: ${{ secrets.API_KEY }}
+      APIMATIC_API_ID: ${{ secrets.API_ID }}
       GITHUB_REPO: your-GitHub-repo-name
       GITHUB_ACCOUNT: your-github-account-name
 
@@ -41,7 +41,7 @@ jobs:
             --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
             -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
             -H "Accept: application/json" \
-            -F "file=@spec/openapi-spec.json" \
+            -F "file=@spec/openapi.yml \
             -o entity.json
 
       - name: Trigger SDK generation
