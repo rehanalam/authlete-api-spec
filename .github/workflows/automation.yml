@@ -50,7 +50,7 @@ jobs:
       - name: Trigger SDK generation
         run: |
           curl -X POST \
-            --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
+            --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID/code-generations/generate" \
             -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
             -H "accept: application/json, text/plain, */*" \
             -H "content-type: application/json;charset=UTF-8" \
