@@ -1,36 +1,61 @@
-name: Update API
+name: Update Portal
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - 'spec/**'
   workflow_dispatch:
 
 jobs:
-  update-api:
+  update-portal:
     runs-on: ubuntu-latest
+
+    env:
+      APIMATIC_API_KEY: ${{ secrets.APIMATIC_API_KEY }}
+      APIMATIC_API_ID: ${{ secrets.APIMATIC_API_ID }}
+      GITHUB_REPO: your-GitHub-repo-name
+      GITHUB_ACCOUNT: your-github-account-name
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          ref: main
 
-      # Import spec
-      - name: Import spec to APIMatic
-        run: curl -X PUT "https://www.apimatic.io/api/api-entities/${{ secrets.API_ID }}" \
-          -H "Authorization: X-Auth-Key ${{ secrets.API_KEY }}" \
-          -F "file=@spec/openapi.yaml"
+      - name: Install zip/unzip
+        run: sudo apt-get install -y zip unzip
 
-      # Trigger SDK generation
-      - name: Generate SDKs
-        run: curl -X POST "https://www.apimatic.io/api/api-entities/${{ secrets.API_ID }}/code-generations" \
+      - name: Zip spec and portal files
+        run: zip -r portal-input.zip *
+        working-directory: spec
 
-      # Package portal build inputs
-      - name: Zip portal input
-        run: zip -r portal-input.zip spec content static APIMATIC-BUILD.json
+      - name: List contents of zip
+        run: zip -sf portal-input.zip
+        working-directory: spec
 
-      # Call portal API
-      - name: Build API Portal
-        run: curl -X POST "https://www.apimatic.io/api/portal" \
-          -H "Authorization: X-Auth-Key ${{ secrets.API_KEY }}" \
-          -F "file=@portal-input.zip" \
-          -o portal-output.zip
+      - name: In-place spec import to APIMatic
+        run: |
+          curl -X PUT \
+            --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -H "Accept: application/json" \
+            -F "file=@spec/openapi.yaml" \
+            -o entity.json
 
-      # Deploy artifacts (e.g. commit SDKs to GitHub, push portal to hosting)
+      - name: Trigger SDK generation
+        run: |
+          curl -X POST \
+            --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID/code-generations" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -H "accept: application/json, text/plain, */*" \
+            -H "content-type: application/json;charset=UTF-8" \
+            --data-raw '{
+              "template": "CS_NET_STANDARD_LIB",
+              "repoName": "'"$GITHUB_REPO"'",
+              "branchName": "CodeGen-CS",
+              "commitMessage": "spec updated",
+              "accountName": "'"$GITHUB_ACCOUNT"'"
+            }' \
+            --compressed
