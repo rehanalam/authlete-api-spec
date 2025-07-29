@@ -1,0 +1,36 @@
+name: Update API
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'spec/**'
+  workflow_dispatch:
+
+jobs:
+  update-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Import spec
+      - name: Import spec to APIMatic
+        run: curl -X PUT "https://www.apimatic.io/api/api-entities/${{ secrets.API_ID }}" \
+          -H "Authorization: X-Auth-Key ${{ secrets.API_KEY }}" \
+          -F "file=@spec/openapi.yaml"
+
+      # Trigger SDK generation
+      - name: Generate SDKs
+        run: curl -X POST "https://www.apimatic.io/api/api-entities/${{ secrets.API_ID }}/code-generations" \
+
+      # Package portal build inputs
+      - name: Zip portal input
+        run: zip -r portal-input.zip spec content static APIMATIC-BUILD.json
+
+      # Call portal API
+      - name: Build API Portal
+        run: curl -X POST "https://www.apimatic.io/api/portal" \
+          -H "Authorization: X-Auth-Key ${{ secrets.API_KEY }}" \
+          -F "file=@portal-input.zip" \
+          -o portal-output.zip
+
+      # Deploy artifacts (e.g. commit SDKs to GitHub, push portal to hosting)
