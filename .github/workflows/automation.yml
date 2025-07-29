@@ -1,4 +1,4 @@
-name: Update Portal
+name: Update APIMatic Portal and SDKs
 
 on:
   push:
@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      APIMATIC_API_KEY: ${{ secrets.API_KEY }}
-      APIMATIC_API_ID: ${{ secrets.API_ID }}
-      GITHUB_REPO: your-GitHub-repo-name
+      APIMATIC_API_KEY: ${{ secrets.APIMATIC_API_KEY }}
+      APIMATIC_API_ID: ${{ secrets.APIMATIC_API_ID }}
+      GITHUB_REPO: your-github-repo-name
       GITHUB_ACCOUNT: your-github-account-name
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v2
         with:
           ref: main
@@ -27,36 +27,38 @@ jobs:
       - name: Install zip/unzip
         run: sudo apt-get install -y zip unzip
 
-      - name: Zip spec and portal files
+      - name: Zip spec directory
         run: zip -r portal-input.zip *
         working-directory: spec
 
-      - name: List contents of zip
+      - name: List contents of zip (debug)
         run: zip -sf portal-input.zip
         working-directory: spec
+
+      - name: Confirm OpenAPI file exists
+        run: ls -l spec/
 
       - name: In-place spec import to APIMatic
         run: |
           curl -X PUT \
             --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID" \
-            --header "Authorization:X-Auth-Key $APIMATIC_API_KEY" \
-            --header "Accept:application/json" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -H "Accept: application/json" \
             -F "file=@spec/openapi-spec.json" \
             -o entity.json
-            
 
       - name: Trigger SDK generation
         run: |
           curl -X POST \
             --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID/code-generations" \
-            --header "Authorization:X-Auth-Key $APIMATIC_API_KEY" \
-            --header "accept: application/json, text/plain, */*" \
-            --header "content-type: application/json;charset=UTF-8" \
+            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -H "accept: application/json, text/plain, */*" \
+            -H "content-type: application/json;charset=UTF-8" \
             --data-raw '{
               "template": "CS_NET_STANDARD_LIB",
               "repoName": "'"$GITHUB_REPO"'",
               "branchName": "CodeGen-CS",
-              "commitMessage": "spec updated",
+              "commitMessage": "API spec updated from GitHub",
               "accountName": "'"$GITHUB_ACCOUNT"'"
             }' \
             --compressed
