@@ -48,18 +48,4 @@ jobs:
             -F "file=@spec/openapi-spec.json"
 
 
-      - name: Trigger SDK generation
-        run: |
-          curl -X POST \
-            --url "https://www.apimatic.io/api/api-entities/$APIMATIC_API_ID/code-generations/generate" \
-            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
-            -H "accept: application/json, text/plain, */*" \
-            -H "content-type: application/json;charset=UTF-8" \
-            --data-raw '{
-              "template": "CS_NET_STANDARD_LIB",
-              "repoName": "new-cs-authlete-sdk",
-              "branchName": "main",
-              "commitMessage": "API spec updated from GitHub",
-              "accountName": "rehanalam"
-            }' \
-            --compressed
+     
