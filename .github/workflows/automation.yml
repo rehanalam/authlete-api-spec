@@ -56,15 +56,15 @@ jobs:
       - name: Trigger SDK generation
         run: |
           curl -X POST \
-            --url "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/code-generations/generate" \
+            --url "https://api.apimatic.io/api-entities/$API_ID/code-generations/generate" \
             -H "Accept: application/json" \
-            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -H "Authorization: X-Auth-Key $API_KEY" \
             -d "template=$SDK_TEMPLATE" \
             -o sdk-gen-response.json
 
-          cat sdk-gen-response.json
-          echo "CODEGEN_ID=$(jq -r '.codeGenerationId' sdk-gen-response.json)" >> $GITHUB_ENV
-      
+          CODEGEN_ID=$(jq -r '.id' sdk-gen-response.json)
+          echo "CODEGEN_ID=$CODEGEN_ID" >> $GITHUB_ENV
+          
       - name: Publish Developer Portal
         run: |
           curl -X PUT \
@@ -76,35 +76,73 @@ jobs:
         run: |
           echo "Waiting 10 seconds for SDK to be ready..."
           sleep 10
-      
+
+      - name: Wait for SDK to be ready
+        run: sleep 10
+
       - name: Download generated SDK
         run: |
           curl -X GET \
-            -H "Authorization: X-Auth-Key $APIMATIC_API_KEY" \
+            -H "Authorization: X-Auth-Key $API_KEY" \
             --output sdk.zip \
-            "https://api.apimatic.io/api-entities/$APIMATIC_API_ID/code-generations/688901f8a41170377a2f5461/generated-sdk"
+            "https://api.apimatic.io/api-entities/$API_ID/code-generations/$CODEGEN_ID/generated-sdk"
 
       - name: Unzip SDK
         run: unzip sdk.zip -d sdk
 
-      - name: Clone target repo
+      - name: Check if repo exists or create it
+        id: check-repo
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git clone https://x-access-token:$GH_PUSH_TOKEN@github.com/$TARGET_REPO.git target-repo
+          REPO_URL="https://api.github.com/repos/$GH_USER/$GH_REPO"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $GH_TOKEN" "$REPO_URL")
 
-      - name: Copy SDK to repo
-        run: |
-          rm -rf target-repo/*
-          cp -r sdk/* target-repo/
+          if [ "$STATUS" == "404" ]; then
+            echo "Repo does not exist. Creating it..."
+            curl -s -X POST \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/user/repos \
+              -d "{\"name\":\"$GH_REPO\"}"
+            echo "branch=main" >> $GITHUB_OUTPUT
+            echo "new_repo=true" >> $GITHUB_OUTPUT
+          else
+            echo "Repo exists."
+            BRANCH="sdk-update-$(uuidgen | cut -c1-8)"
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+            echo "new_repo=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Push to GitHub
+      - name: Clone repo and prepare SDK
         run: |
-          cd target-repo
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+
+          git clone https://x-access-token:$GH_TOKEN@github.com/$GH_USER/$GH_REPO.git repo
+          cd repo
+
+          if [[ "${{ steps.check-repo.outputs.new_repo }}" == "false" ]]; then
+            git checkout -b ${{ steps.check-repo.outputs.branch }}
+          fi
+
+          rm -rf *
+          cp -r ../sdk/* .
+
           git add .
-          git commit -m "chore: auto-update SDK $(date +%Y-%m-%d)"
-          git push origin main
+          git commit -m "chore: update SDK"
+          git push origin ${{ steps.check-repo.outputs.branch }}
 
+      - name: Create PR if repo already existed
+        if: steps.check-repo.outputs.new_repo == 'false'
+        run: |
+          curl -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/$GH_USER/$GH_REPO/pulls \
+            -d "{
+              \"title\": \"Update SDK from APIMatic\",
+              \"head\": \"${{ steps.check-repo.outputs.branch }}\",
+              \"base\": \"main\"
+            }"
 
 
      
