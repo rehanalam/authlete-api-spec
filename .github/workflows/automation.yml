@@ -14,7 +14,7 @@ jobs:
 
     env:
       APIMATIC_API_KEY: ${{ secrets.API_KEY }}
-      APIMATIC_API_ID: ${{ secrets.API_ID }}
+      APIMATIC_API_ID: ${{ secrets.API_ENTITY_ID }}
       GITHUB_REPO: your-github-repo-name
       GITHUB_ACCOUNT: your-github-account-name
 
