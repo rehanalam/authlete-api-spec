@@ -36,7 +36,7 @@
     }
   ],
   "paths": {
-    "/api/{serviceId}/service/get/1243": {
+    "/api/{serviceId}/service/get": {
       "get": {
         "summary": "Get Service",
         "description": "Get a service.\n\nIf the access token can only view or modify clients underneath this service, but does not\nhave access to view this service directly, a limited view of the service will be returned.\n",
